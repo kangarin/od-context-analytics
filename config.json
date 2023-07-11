@@ -1,0 +1,17 @@
+{
+    "car_detection":{
+        "profile_root_path": "car_bbox_profile",
+        "class_index": 2,
+        "highest_resolution": 1920,
+        "highest_fps": 30
+    },
+
+    "person_detection":{
+        "profile_root_path": "person_bbox_profile",
+        "class_index": 0,
+        "highest_resolution": 1920,
+        "highest_fps": 30
+    }
+    
+}
+  
