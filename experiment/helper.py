@@ -38,11 +38,31 @@ def bbox_iou_list(box_list1, box_list2, thres):
     while len(ious) > 0:
         result.append(ious[0])
         ious.pop(0)
-        for i in range(len(ious)):
-            if ious[i][1] == result[-1][1] or ious[i][2] == result[-1][2]\
-            or ious[i][1] == result[-1][2] or ious[i][2] == result[-1][1]:
+        for i in range(len(ious) - 1, -1, -1):
+            # if ious[i][1] == result[-1][1] or ious[i][2] == result[-1][2]\
+            # or ious[i][1] == result[-1][2] or ious[i][2] == result[-1][1]:
+            if ious[i][1] == result[-1][1] or ious[i][2] == result[-1][2]:
                 ious.pop(i)
     return result
+
+def visualize_result_bboxes(bbox_list1, bbox_list2, result, resolution):
+    import cv2
+    import numpy as np
+    img = np.zeros((resolution[1], resolution[0], 3), np.uint8)
+    for i in range(len(bbox_list1)):
+        cv2.rectangle(img, (int(bbox_list1[i][0]), int(bbox_list1[i][1])),\
+            (int(bbox_list1[i][2]), int(bbox_list1[i][3])), (255, 0, 0), 5, )
+    for i in range(len(bbox_list2)):
+        cv2.rectangle(img, (int(bbox_list2[i][0]), int(bbox_list2[i][1])),\
+            (int(bbox_list2[i][2]), int(bbox_list2[i][3])), (0, 0, 255), 5)
+    # for i in range(len(result)):
+    #     cv2.rectangle(img, (int(result[i][1][0]), int(result[i][1][1])),\
+    #         (int(result[i][1][2]), int(result[i][1][3])), (0, 255, 0), 5)
+    #     cv2.rectangle(img, (int(result[i][2][0]), int(result[i][2][1])),\
+    #         (int(result[i][2][2]), int(result[i][2][3])), (0, 255, 0), 5)
+
+    cv2.imshow('img', img)
+    cv2.waitKey(0)
         
 
 if __name__ == '__main__':
@@ -50,21 +70,21 @@ if __name__ == '__main__':
     box_list1 = []
     box_list2 = []
     import random
-    for i in range(5):
-        box_list1.append([random.randint(0, 100), random.randint(0, 100),\
-            random.randint(0, 100), random.randint(0, 100)])
-        box_list2.append([random.randint(0, 100), random.randint(0, 100),\
-            random.randint(0, 100), random.randint(0, 100)])
+    for i in range(10):
+        box_list1.append([random.randint(0, 800), random.randint(0, 800),\
+            random.randint(0, 800), random.randint(0, 800)])
+        box_list2.append([random.randint(0, 800), random.randint(0, 800),\
+            random.randint(0, 800), random.randint(0, 800)])
     print(box_list1)
     print(box_list2)
     # test
-    result = bbox_iou_list(box_list1, box_list2, 0.1)
+    result = bbox_iou_list(box_list1, box_list2, 0.3)
     print(result)
 
     # visualize the result
     import cv2
     import numpy as np
-    img = np.zeros((100, 100, 3), np.uint8)
+    img = np.zeros((800, 800, 3), np.uint8)
     for i in range(len(box_list1)):
         cv2.rectangle(img, (box_list1[i][0], box_list1[i][1]),\
             (box_list1[i][2], box_list1[i][3]), (255, 0, 0), 1)

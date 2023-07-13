@@ -126,13 +126,18 @@ def generate_one_profile(video_path, weights, res, object_class_index, total_fra
 
 if __name__ == '__main__':
     res_options = [
-                # (1920, 1080), 
-                # (1600, 900), 
-                (1280, 720), 
-                (960, 540), 
-                (640, 480), 
-                (320, 240)
-                ]
+        (320, 180),
+        (480, 270),
+        (640, 360),
+        (800, 450),
+        (960, 540),
+        (1120, 630),
+        (1280, 720),
+        # (1440, 810),
+        # (1600, 900),
+        # (1760, 990),
+        # (1920, 1080)
+    ]
     video_path = "/Volumes/Untitled/video/car-driving.mp4"
     weights = 'yolov5s.pt'
     total_frames = 500
