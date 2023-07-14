@@ -33,7 +33,19 @@ def generate_delay(device = 'cpu',
     return total_time / repeat
 
 if __name__ == "__main__":
-    resolution_list = [(1920, 1080), (1600, 900), (1280, 720), (960, 540), (640, 480), (320, 240)]
+    resolution_list = [
+        (320, 180),
+        (480, 270),
+        (640, 360),
+        (800, 450),
+        (960, 540),
+        (1120, 630),
+        (1280, 720),
+        (1440, 810),
+        (1600, 900),
+        (1760, 990),
+        (1920, 1080)
+    ]
     import csv
     with open("delay.csv", "w") as f:
         writer = csv.writer(f)

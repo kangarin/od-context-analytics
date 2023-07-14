@@ -92,13 +92,24 @@ def process_res_queue(manager, res_queue):
         print('proposed_res: ' + str(proposed_res))
 
 def process_fps_queue(manager, fps_queue):
-
+    delay_dict = {}
+    import csv
+    with open('delay.csv', 'r') as f:
+        reader = csv.reader(f)
+        next(reader, None)
+        for row in reader:
+            delay_dict[int(row[0])] = float(row[1])
     while True:
         ctx = fps_queue.get()
         job_uid = ctx['job_uid']
         det_scene = ctx['det_scene']
         image_list = ctx['image_list']
         user_constraint_delay = ctx['user_constraint']['delay']
+        # remove 'p' from '720p'
+        cur_res = ctx['cur_video_conf']['resolution']
+        cur_res = int(int(cur_res[:-1]) * 16 / 9)
+        # 0.1 is a hyper-parameter to characterize the delay of the system
+        user_constraint_fps = 1.0 / (delay_dict[cur_res] + 0.1)
         # 不在预设的场景中，丢弃
         if det_scene not in manager.scene_dict:
             continue
@@ -107,6 +118,7 @@ def process_fps_queue(manager, fps_queue):
             manager.job_uid_to_scene_dict[job_uid] = det_scene
         det = manager.fps_proposers_dict[det_scene].detect(image_list[0])
         proposed_fps = manager.fps_proposers_dict[det_scene].propose(image_list, det)
+        proposed_fps = min(proposed_fps, user_constraint_fps)
         print('proposed_fps: ' + str(proposed_fps))
 
 @app.route('/')

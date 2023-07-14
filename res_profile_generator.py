@@ -133,15 +133,15 @@ if __name__ == '__main__':
         (960, 540),
         (1120, 630),
         (1280, 720),
-        # (1440, 810),
-        # (1600, 900),
-        # (1760, 990),
-        # (1920, 1080)
+        (1440, 810),
+        (1600, 900),
+        (1760, 990),
+        (1920, 1080)
     ]
-    video_path = "/Volumes/Untitled/video/car-driving.mp4"
+    video_path = "/Volumes/Untitled/video/input.mov"
     weights = 'yolov5s.pt'
     total_frames = 500
-    save_root_path = "car_driving_profile/"
+    save_root_path = "class_person_profile/"
 
     for res in res_options:
         generate_one_profile(video_path, weights, res, 2, total_frames, save_root_path)
