@@ -88,9 +88,11 @@ def calculate_one_frame_IOU_precision(one_res_profile, one_gt_profile, resolutio
                 matched_bbox.append(bbox)
                 to_remove.append(bbox)
                 break
+    # for bbox in to_remove:
+    #     one_res_profile.remove(bbox)
+    missed_or_false_bbox = one_res_profile.copy()
     for bbox in to_remove:
-        one_res_profile.remove(bbox)
-    missed_or_false_bbox = one_res_profile
+        missed_or_false_bbox.remove(bbox)
 
     for bbox in one_gt_profile:
         is_missed = True
@@ -101,7 +103,7 @@ def calculate_one_frame_IOU_precision(one_res_profile, one_gt_profile, resolutio
         if is_missed:
             missed_or_false_bbox.append(bbox)
     # if resolution_ratio == 0.25:
-    #     visualize_result_bboxes(one_res_profile, one_gt_profile, result, gt_res)
+    # visualize_result_bboxes(one_res_profile, one_gt_profile, result, gt_res)
     # for i in one_gt_profile:
     #     for j in one_res_profile:
     #         pass
@@ -114,6 +116,18 @@ class res_proposer:
     def __init__(self, detector, gt_res, profile_data_path, num_bins = 20, class_index = 0):
         self.gt_res = gt_res
         self.kb = kb_build(profile_data_path, gt_res, num_bins)
+        # use matplotlib to plot self.kb as histograms
+        # import matplotlib.pyplot as plt
+        # for key in self.kb.keys():
+        #     plt.clf()
+        #     plt.bar(range(len(self.kb[key])), self.kb[key].values(), align='center')
+        #     plt.xticks(range(len(self.kb[key])), list(self.kb[key].keys()))
+        #     plt.xlabel('relative size')
+        #     plt.ylabel('accuracy')
+        #     plt.title('accuracy distribution in ' + str(key) + 'p')
+        #     plt.show()
+        #     plt.savefig('accuracy distribution in ' + str(key) + 'p') 
+
         self.num_bins = num_bins
         self.class_index = class_index
         self.detector = detector
@@ -152,7 +166,7 @@ class res_proposer:
 
 
 if __name__ == "__main__":
-    profile_root_path = "car_driving_profile/"
+    profile_root_path = "class_person_profile/"
     profile_data_path = []
     res_options = []
     gt_res = (0, 0)
@@ -174,18 +188,18 @@ if __name__ == "__main__":
     }
     detector = CommonDetection(args)
     # 初始化一个proposer，传入离线采集的profile数据作为knowledge base
-    p = res_proposer(detector, gt_res, profile_data_path=profile_data_path, num_bins=50, class_index = 2)
+    p = res_proposer(detector, gt_res, profile_data_path=profile_data_path, num_bins=50, class_index = 0)
     # 传入当前帧的检测结果框，以及精度约束，返回一个建议的分辨率
-    res1 = p.propose(gt_bbox=[[0, 0, 5, 5],[5, 6, 10, 20]], accuracy_constraint=0.4)
-    res2 = p.propose(gt_bbox=[[0, 0, 50, 50],[5, 6, 100, 200]], accuracy_constraint=0.8)
-    res3 = p.propose(gt_bbox=[[0, 0, 5, 5],[5, 6, 10, 20]], accuracy_constraint=0.6)
-    res4 = p.propose(gt_bbox=[[0, 0, 50, 50],[5, 6, 100, 200]], accuracy_constraint=0.9)
-    print(res1)
-    print(res2)
-    print(res3)
-    print(res4)
+    # res1 = p.propose(gt_bbox=[[0, 0, 5, 5],[5, 6, 10, 20]], accuracy_constraint=0.4)
+    # res2 = p.propose(gt_bbox=[[0, 0, 50, 50],[5, 6, 100, 200]], accuracy_constraint=0.8)
+    # res3 = p.propose(gt_bbox=[[0, 0, 5, 5],[5, 6, 10, 20]], accuracy_constraint=0.6)
+    # res4 = p.propose(gt_bbox=[[0, 0, 50, 50],[5, 6, 100, 200]], accuracy_constraint=0.9)
+    # print(res1)
+    # print(res2)
+    # print(res3)
+    # print(res4)
     import cv2
-    video_path = "/Volumes/Untitled/video/traffic-india-720p.mp4"
+    video_path = "/Volumes/Untitled/video/classroom-1080p.mp4"
     cap = cv2.VideoCapture(video_path)
     skip_frame = 500
     while True:
@@ -194,7 +208,7 @@ if __name__ == "__main__":
             skip_frame -= 1
             if skip_frame == 0:
                 # 传入当前帧的检测结果框，以及精度约束，返回一个建议的分辨率
-                res = p.propose(gt_bbox=p.detect(frame), accuracy_constraint=0.85)
+                res = p.propose(gt_bbox=p.detect(frame), accuracy_constraint=0.9)
                 print(res)
                 # cv2.imshow("frame", frame)
                 # cv2.waitKey(1)

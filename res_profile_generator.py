@@ -88,7 +88,7 @@ from common_detection.common_detection import CommonDetection
 import cv2
 import os
 
-def generate_one_profile(video_path, weights, res, object_class_index, total_frames, save_root_path):
+def generate_one_profile(video_path, weights, res, object_class_index, total_frames, skip_frame, save_root_path):
     args = {
         'weights': weights,
         'img': res[0]
@@ -105,11 +105,15 @@ def generate_one_profile(video_path, weights, res, object_class_index, total_fra
         writer = csv.writer(f)
         writer.writerow(['frame', 'number of objects'])
         frame_num = 1
+        frame_cnt = 0
         while True:
             ret, frame = video_cap.read()
             frame = cv2.resize(frame, res)
             if not ret:
                 break
+            if frame_num % skip_frame != 0:
+                frame_num += 1
+                continue
             input_ctx = dict()
             input_ctx['image'] = frame
             input_ctx['class_index'] = object_class_index
@@ -119,8 +123,9 @@ def generate_one_profile(video_path, weights, res, object_class_index, total_fra
             writer.writerow([frame_num, detection_result])
             print('detected frame ' + str(frame_num))
             frame_num += 1
+            frame_cnt += 1
 
-            if frame_num == total_frames:
+            if frame_cnt == total_frames:
                 break
 
 
@@ -138,11 +143,12 @@ if __name__ == '__main__':
         (1760, 990),
         (1920, 1080)
     ]
-    video_path = "/Volumes/Untitled/video/input.mov"
+    video_path = "/Volumes/Untitled/video/classroom-1080p.mp4"
     weights = 'yolov5s.pt'
-    total_frames = 500
+    total_frames = 50
+    skip_frame = 100
     save_root_path = "class_person_profile/"
 
     for res in res_options:
-        generate_one_profile(video_path, weights, res, 2, total_frames, save_root_path)
+        generate_one_profile(video_path, weights, res, 0, total_frames, skip_frame, save_root_path)
         print("profiled " + str(res) + " finished")
