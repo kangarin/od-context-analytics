@@ -45,7 +45,7 @@ def bbox_iou_list(box_list1, box_list2, thres):
                 ious.pop(i)
     return result
 
-def visualize_result_bboxes(bbox_list1, bbox_list2, result, resolution):
+def visualize_result_bboxes(bbox_list1, bbox_list2, resolution):
     import cv2
     import numpy as np
     img = np.zeros((resolution[1], resolution[0], 3), np.uint8)

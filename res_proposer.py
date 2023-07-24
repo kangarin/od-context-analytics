@@ -51,7 +51,13 @@ def calculate_IOU_precision(res_profile, gt_profile, num_bins, resolution_ratio,
     for i in range(num_bins-2, -1, -1):
         return_correct_dict[i] += return_correct_dict[i+1]
         return_mistake_dict[i] += return_mistake_dict[i+1]
-    for i in range(len(return_dict.keys())):
+    has_first_nonzero = False
+    for i in range(num_bins-1, -1, -1):
+        if return_correct_dict[i] == 0 and has_first_nonzero == False:
+            return_dict[i] = 1.0
+            continue
+        if return_correct_dict[i] != 0:
+            has_first_nonzero = True
         return_dict[i] = return_correct_dict[i] / (return_correct_dict[i] + return_mistake_dict[i] + 1e-8)
     return return_dict
 
@@ -103,7 +109,8 @@ def calculate_one_frame_IOU_precision(one_res_profile, one_gt_profile, resolutio
         if is_missed:
             missed_or_false_bbox.append(bbox)
     # if resolution_ratio == 0.25:
-    # visualize_result_bboxes(one_res_profile, one_gt_profile, result, gt_res)
+    # visualize_result_bboxes(one_res_profile, one_gt_profile, gt_res)
+    # visualize_result_bboxes(matched_bbox, matched_bbox, gt_res)
     # for i in one_gt_profile:
     #     for j in one_res_profile:
     #         pass
@@ -117,7 +124,7 @@ class res_proposer:
         self.gt_res = gt_res
         self.kb = kb_build(profile_data_path, gt_res, num_bins)
         # use matplotlib to plot self.kb as histograms
-        # import matplotlib.pyplot as plt
+        import matplotlib.pyplot as plt
         # for key in self.kb.keys():
         #     plt.clf()
         #     plt.bar(range(len(self.kb[key])), self.kb[key].values(), align='center')
@@ -127,6 +134,38 @@ class res_proposer:
         #     plt.title('accuracy distribution in ' + str(key) + 'p')
         #     plt.show()
         #     plt.savefig('accuracy distribution in ' + str(key) + 'p') 
+
+        # use matplotlib to plot self.kb as line charts
+
+        # for key in self.kb.keys():
+        #     plt.clf()
+        #     plt.ylim(0.0, 1.1)
+        #     # only plot the first 15 keys
+        #     plt.plot(list(self.kb[key].keys())[:15], list(self.kb[key].values())[:15])
+        #     # plt.plot(list(self.kb[key].keys()), list(self.kb[key].values()))
+        #     plt.xlabel('relative size index')
+        #     plt.ylabel('accuracy')
+        #     plt.title('accuracy distribution in ' + str(key) + 'p')
+        #     plt.show()
+        #     plt.savefig('accuracy distribution in ' + str(key) + 'p')
+
+        # # take the first kv pair from all kbs of different resolutions
+        # first_bin_dict = {}
+        # for key in self.kb.keys():
+        #     first_bin_dict[key] = self.kb[key][0]
+        # # sort from small to large
+        # first_bin_dict = dict(sorted(first_bin_dict.items(), key=lambda item: item[0]))
+        # # use matplotlib to plot first_bin_dict as line charts
+        # plt.clf()
+        # plt.ylim(0.0, 1.1)
+        # plt.plot(list(first_bin_dict.keys()), list(first_bin_dict.values()))
+        # plt.xlabel('resolution')
+        # plt.ylabel('accuracy')
+        # plt.title('accuracy distribution in the first bin')
+        # plt.show()
+        # plt.savefig('accuracy distribution in the first bin')
+
+
 
         self.num_bins = num_bins
         self.class_index = class_index
@@ -166,7 +205,7 @@ class res_proposer:
 
 
 if __name__ == "__main__":
-    profile_root_path = "class_person_profile/"
+    profile_root_path = "traffic_india_profile/"
     profile_data_path = []
     res_options = []
     gt_res = (0, 0)
@@ -188,7 +227,7 @@ if __name__ == "__main__":
     }
     detector = CommonDetection(args)
     # 初始化一个proposer，传入离线采集的profile数据作为knowledge base
-    p = res_proposer(detector, gt_res, profile_data_path=profile_data_path, num_bins=50, class_index = 0)
+    p = res_proposer(detector, gt_res, profile_data_path=profile_data_path, num_bins=30, class_index = 0)
     # 传入当前帧的检测结果框，以及精度约束，返回一个建议的分辨率
     # res1 = p.propose(gt_bbox=[[0, 0, 5, 5],[5, 6, 10, 20]], accuracy_constraint=0.4)
     # res2 = p.propose(gt_bbox=[[0, 0, 50, 50],[5, 6, 100, 200]], accuracy_constraint=0.8)
@@ -199,7 +238,7 @@ if __name__ == "__main__":
     # print(res3)
     # print(res4)
     import cv2
-    video_path = "/Volumes/Untitled/video/classroom-1080p.mp4"
+    video_path = "/Volumes/Untitled/video/traffic-india-720p.mp4"
     cap = cv2.VideoCapture(video_path)
     skip_frame = 500
     while True:
@@ -208,7 +247,7 @@ if __name__ == "__main__":
             skip_frame -= 1
             if skip_frame == 0:
                 # 传入当前帧的检测结果框，以及精度约束，返回一个建议的分辨率
-                res = p.propose(gt_bbox=p.detect(frame), accuracy_constraint=0.9)
+                res = p.propose(gt_bbox=p.detect(frame), accuracy_constraint=0.8)
                 print(res)
                 # cv2.imshow("frame", frame)
                 # cv2.waitKey(1)

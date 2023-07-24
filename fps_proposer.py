@@ -25,7 +25,7 @@ def center_of_bbox(bbox):
     return (x1 + x2) / 2, (y1 + y2) / 2
 
 class fps_proposer:
-    def __init__(self, detector, gt_res= (1920, 1080), cur_fps = 30, class_index = 0, sliding_window_size = 5, delay_data_path = "delay.csv"):
+    def __init__(self, detector, gt_res= (1920, 1080), cur_fps = 30, class_index = 0, sliding_window_size = 10, delay_data_path = "delay.csv"):
         self.gt_res = gt_res
         self.cur_fps = cur_fps
         self.detector = detector
@@ -68,12 +68,22 @@ class fps_proposer:
                 bbox_xyxy = [x, y, x + w, y + h]
                 t.tracker_info.update(bbox_xyxy)
 
+        # use cv2 to draw a black image, and draw the trajectory on it
+        import numpy as np
+        img = np.zeros((self.gt_res[1], self.gt_res[0], 3), np.uint8)
+        for i in range(len(tracker_wrapper_list)):
+            init_x, init_y = center_of_bbox(tracker_wrapper_list[i].tracker_info.init_bbox)
+            cur_x, cur_y = center_of_bbox(tracker_wrapper_list[i].tracker_info.cur_bbox) 
+            cv2.line(img, (int(init_x), int(init_y)), (int(cur_x), int(cur_y)), (0, 0, 255), 5)
+        cv2.imshow("img", img)
+        cv2.waitKey(0)
+
         # initialize the fps to 1
         least_time = 1.0
         # analyze objects' relative moving speed
         for i in range(len(tracker_wrapper_list)):
             init_x, init_y = center_of_bbox(tracker_wrapper_list[i].tracker_info.init_bbox)
-            cur_x, cur_y = center_of_bbox(tracker_wrapper_list[i].tracker_info.cur_bbox)
+            cur_x, cur_y = center_of_bbox(tracker_wrapper_list[i].tracker_info.cur_bbox) 
             x_relative_diff = (cur_x - init_x) / self.gt_res[0]
             y_relative_diff = (cur_y - init_y) / self.gt_res[1]
             time = (1 / self.cur_fps) * (len(frame_list) - 1)
@@ -101,7 +111,7 @@ class fps_proposer:
 
 # test
 if __name__ == "__main__":
-    video_path = "/Volumes/Untitled/video/traffic-1080p.mp4"
+    video_path = "/Volumes/Untitled/video/traffic-india-720p.mp4"
 
     # # 初始化一个fps_proposer，传入当前的分辨率和fps
     # p = fps_proposer(gt_res= (1920, 1080), cur_fps = 30)
@@ -112,7 +122,7 @@ if __name__ == "__main__":
     args = {
         'weights': 'yolov5s.pt',
         'device': 'cpu',
-        'img': 1920,
+        'img': 1280,
         # 'device': 'cuda:0'
     }
     detector = CommonDetection(args)
@@ -120,7 +130,8 @@ if __name__ == "__main__":
     video = cv2.VideoCapture(video_path)
     frame_list = []
     fps_history = []
-    cnt = 5
+    cnt = 30
+    fp = fps_proposer(detector, gt_res= (1280, 720), cur_fps = 30, class_index = 2, sliding_window_size = 10, delay_data_path = "delay.csv")
     while True:
         ret, frame = video.read()
         if not ret:
@@ -128,7 +139,6 @@ if __name__ == "__main__":
         frame_list.append(frame)
         cnt -= 1
         if cnt == 0:
-            fp = fps_proposer(detector, class_index = 2)
             # detection
             input_ctx = dict()
             input_ctx['image'] = frame_list[0]
