@@ -15,11 +15,9 @@ def draw_line_chart(data, title, xlabel, ylabel):
     plt.title(title)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-
-
     # plt.show()
-    plt.savefig('fps.png')
+    plt.savefig('res.png')
 
 if __name__ == '__main__':
-    data = read_file('car_fps_exp_data/fps_sw20.txt')
-    draw_line_chart(data, 'proposed fps change over time', 'frame ID', 'fps')
+    data = read_file('res.txt')
+    draw_line_chart(data, 'proposed resolution change over time', 'frame ID', 'resolution')

@@ -117,7 +117,7 @@ class res_proposer:
 
 
 if __name__ == "__main__":
-    profile_root_path = "test_profile/"
+    profile_root_path = "traffic_india_1080_profile/"
     profile_data_path = []
     res_options = []
     gt_res = (0, 0)
@@ -141,16 +141,16 @@ if __name__ == "__main__":
     # 初始化一个proposer，传入离线采集的profile数据作为knowledge base
     p = res_proposer(detector, gt_res, profile_data_path=profile_data_path, num_bins=20, class_index= 2)
     # 传入当前帧的检测结果框，以及精度约束，返回一个建议的分辨率
-    res1 = p.propose(gt_bbox=[[0, 0, 5, 5],[5, 6, 10, 20]], accuracy_constraint=0.4)
-    res2 = p.propose(gt_bbox=[[0, 0, 50, 50],[5, 6, 100, 200]], accuracy_constraint=0.8)
-    res3 = p.propose(gt_bbox=[[0, 0, 5, 5],[5, 6, 10, 20]], accuracy_constraint=0.6)
-    res4 = p.propose(gt_bbox=[[0, 0, 50, 50],[5, 6, 100, 200]], accuracy_constraint=0.9)
-    print(res1)
-    print(res2)
-    print(res3)
-    print(res4)
+    # res1 = p.propose(gt_bbox=[[0, 0, 5, 5],[5, 6, 10, 20]], accuracy_constraint=0.4)
+    # res2 = p.propose(gt_bbox=[[0, 0, 50, 50],[5, 6, 100, 200]], accuracy_constraint=0.8)
+    # res3 = p.propose(gt_bbox=[[0, 0, 5, 5],[5, 6, 10, 20]], accuracy_constraint=0.6)
+    # res4 = p.propose(gt_bbox=[[0, 0, 50, 50],[5, 6, 100, 200]], accuracy_constraint=0.9)
+    # print(res1)
+    # print(res2)
+    # print(res3)
+    # print(res4)
     import cv2
-    video_path = "/Volumes/Untitled/video/car-driving.mp4"
+    video_path = "/Users/wenyidai/Downloads/india-traffic-1080p.mp4"
     cap = cv2.VideoCapture(video_path)
     skip_frame = 500
     while True:
@@ -159,7 +159,7 @@ if __name__ == "__main__":
             skip_frame -= 1
             if skip_frame == 0:
                 # 传入当前帧的检测结果框，以及精度约束，返回一个建议的分辨率
-                res = p.propose(gt_bbox=p.detect(frame), accuracy_constraint=0.3)
+                res = p.propose(gt_bbox=p.detect(frame), accuracy_constraint=0.8)
                 print(res)
                 # cv2.imshow("frame", frame)
                 # cv2.waitKey(1)

@@ -6,6 +6,9 @@ from common_detection.common_detection import CommonDetection
 def relative_size(object_width, object_height, img_width, img_height):
     return object_width / img_width, object_height / img_height
 
+def nonlinear_transform(x):
+    return 1-(1-x)**2
+
 import csv
 def kb_build(profile_data_path, gt_res, num_bins = 20):
     res_profile_dict = {}
@@ -33,7 +36,7 @@ def kb_build(profile_data_path, gt_res, num_bins = 20):
         resolution_ratio = i * 1.0 / gt_res[0]
         kb[i] = calculate_IOU_precision(res_profile_dict[i], gt_res_profile, num_bins, resolution_ratio, gt_res)
     return kb
-                  
+
 def calculate_IOU_precision(res_profile, gt_profile, num_bins, resolution_ratio, gt_res):
     assert len(res_profile) == len(gt_profile)
     return_correct_dict = {}
@@ -67,6 +70,7 @@ def assign_bbox_to_bins(bboxes, bin_dict, gt_res):
     for bbox in bboxes:
         relative_width, relative_height = relative_size(bbox[2] - bbox[0], bbox[3] - bbox[1], gt_res[0], gt_res[1])
         s = min(relative_width, relative_height)
+        s = nonlinear_transform(s)
         bin_index = min(int(s // bin_width), bin_num-1)
         bin_dict[bin_index] += 1
         
@@ -80,26 +84,31 @@ def calculate_one_frame_IOU_precision(one_res_profile, one_gt_profile, resolutio
                         l[2] / resolution_ratio, 
                         l[3] / resolution_ratio] for l in one_res_profile]
     one_gt_profile = [[l[0], l[1], l[2], l[3]] for l in one_gt_profile]
-    result = bbox_iou_list(one_res_profile, one_gt_profile, 0.5)
+    result = bbox_iou_list(one_res_profile, one_gt_profile, 0.7)
     # three cases: 1. true bbox matches low resolution bbox
     # 2. true bbox does not have a low resolution bbox match
     # 3. low resolution bbox is a false positive
     # case 2 and 3 are combined as one for convenience
     matched_bbox = []
     missed_or_false_bbox = []
-    to_remove = []
+
+    # 多检测的
+    # missed_or_false_bbox = one_res_profile.copy()
+    # for bbox in one_res_profile:
+    #     for r in result:
+    #         if bbox == r[1]:
+    #             matched_bbox.append(bbox)
+    #             missed_or_false_bbox.remove(bbox)
+    #             break
+
+    # 为避免误差太大，先不管多检测的
     for bbox in one_res_profile:
         for r in result:
             if bbox == r[1]:
                 matched_bbox.append(bbox)
-                to_remove.append(bbox)
                 break
-    # for bbox in to_remove:
-    #     one_res_profile.remove(bbox)
-    missed_or_false_bbox = one_res_profile.copy()
-    for bbox in to_remove:
-        missed_or_false_bbox.remove(bbox)
 
+    # 漏检测的
     for bbox in one_gt_profile:
         is_missed = True
         for r in result:
@@ -108,6 +117,7 @@ def calculate_one_frame_IOU_precision(one_res_profile, one_gt_profile, resolutio
                 break
         if is_missed:
             missed_or_false_bbox.append(bbox)
+
     # if resolution_ratio == 0.25:
     # visualize_result_bboxes(one_res_profile, one_gt_profile, gt_res)
     # visualize_result_bboxes(matched_bbox, matched_bbox, gt_res)
@@ -187,6 +197,7 @@ class res_proposer:
         for bbox in gt_bbox:
             relative_width, relative_height = relative_size(bbox[2] - bbox[0], bbox[3] - bbox[1], self.gt_res[0], self.gt_res[1])
             min_relative_size = min(min_relative_size, min(relative_width, relative_height))
+            min_relative_size = nonlinear_transform(min_relative_size)
         min_size_bin_num = int(min_relative_size * self.num_bins)
         # find the lowest resolution that is under the accuracy constraint
         lowest_res = self.gt_res[0]
@@ -205,7 +216,7 @@ class res_proposer:
 
 
 if __name__ == "__main__":
-    profile_root_path = "traffic_india_profile/"
+    profile_root_path = "car_driving_profile/"
     profile_data_path = []
     res_options = []
     gt_res = (0, 0)
@@ -227,7 +238,7 @@ if __name__ == "__main__":
     }
     detector = CommonDetection(args)
     # 初始化一个proposer，传入离线采集的profile数据作为knowledge base
-    p = res_proposer(detector, gt_res, profile_data_path=profile_data_path, num_bins=30, class_index = 0)
+    p = res_proposer(detector, gt_res, profile_data_path=profile_data_path, num_bins=20, class_index = 2)
     # 传入当前帧的检测结果框，以及精度约束，返回一个建议的分辨率
     # res1 = p.propose(gt_bbox=[[0, 0, 5, 5],[5, 6, 10, 20]], accuracy_constraint=0.4)
     # res2 = p.propose(gt_bbox=[[0, 0, 50, 50],[5, 6, 100, 200]], accuracy_constraint=0.8)
@@ -247,10 +258,15 @@ if __name__ == "__main__":
             skip_frame -= 1
             if skip_frame == 0:
                 # 传入当前帧的检测结果框，以及精度约束，返回一个建议的分辨率
-                res = p.propose(gt_bbox=p.detect(frame), accuracy_constraint=0.8)
+                res = p.propose(gt_bbox=p.detect(frame), accuracy_constraint=0.90)
                 print(res)
+                # write res to file
+                # with open("res.txt", "a") as f:
+                #     f.write(str(res) + "\n")
+
+
                 # cv2.imshow("frame", frame)
                 # cv2.waitKey(1)
-                skip_frame = 50
+                skip_frame = 100
         else:
             break
